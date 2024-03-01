@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@openzeppelin/contracts": "4.9",
     "ds-test": "github:dapphub/ds-test",
     "forge-std": "github:foundry-rs/forge-std"
   },
