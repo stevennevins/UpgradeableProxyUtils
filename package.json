@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "ds-test": "github:dapphub/ds-test",
+    "forge-std": "github:foundry-rs/forge-std"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5",
+    "prettier-plugin-solidity": "^1.3.1"
+  }
+}
