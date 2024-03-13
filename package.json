@@ -1,5 +1,5 @@
 {
-  "name": "stevennevins/oz-upgrades-utils",
+  "name": "@stevennevins/proxy",
   "dependencies": {
     "@0xsequence/create3": "github:0xsequence/create3",
     "@openzeppelin/contracts": "4.9",
