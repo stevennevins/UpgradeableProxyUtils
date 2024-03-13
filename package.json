@@ -1,4 +1,5 @@
 {
+  "name": "stevennevins/oz-upgrades-utils",
   "dependencies": {
     "@0xsequence/create3": "github:0xsequence/create3",
     "@openzeppelin/contracts": "4.9",
