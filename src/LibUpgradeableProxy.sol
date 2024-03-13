@@ -191,6 +191,17 @@ library LibUpgradeableProxy {
     }
 
     /**
+     * @dev Deploys a beacon proxy using the given beacon and call data.
+     *
+     * @param beacon Address of the beacon to use
+     * @param data Encoded call data of the initializer function to call during creation of the proxy, or empty if no initialization is required
+     * @return Proxy address
+     */
+    function deployBeaconProxy(bytes32 salt, address beacon, bytes memory data) internal returns (address) {
+        return _deploy(salt, "BeaconProxy.sol:BeaconProxy", abi.encode(beacon, data));
+    }
+
+    /**
      * @dev Upgrades a proxy to a new implementation contract.
      * @param proxy Address of the proxy to upgrade
      * @param contractName Name of the new implementation contract to upgrade to, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
