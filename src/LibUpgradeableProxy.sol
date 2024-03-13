@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import {Vm} from "forge-std/Vm.sol";
+import {Create3} from "create3/Create3.sol";
 import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/UpgradeableBeacon.sol";
@@ -59,6 +60,22 @@ library LibUpgradeableProxy {
      * @param initializerData Encoded call data of the initializer function to call during creation of the proxy, or empty if no initialization is required
      * @return Proxy address
      */
+    function deployUUPSProxy(
+        bytes32 salt,
+        string memory contractName,
+        bytes memory initializerData,
+        bytes memory implConstructorArgs
+    ) internal returns (address) {
+        address impl = deployImplementation(contractName, implConstructorArgs);
+        return address(_deploy(salt, "ERC1967Proxy.sol:ERC1967Proxy", abi.encode(impl, initializerData)));
+    }
+    /**
+     * @dev Deploys a UUPS proxy using the given contract as the implementation.
+     *
+     * @param contractName Name of the contract to use as the implementation, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
+     * @param initializerData Encoded call data of the initializer function to call during creation of the proxy, or empty if no initialization is required
+     * @return Proxy address
+     */
     function deployUUPSProxy(string memory contractName, bytes memory initializerData) internal returns (address) {
         return deployUUPSProxy(contractName, initializerData, "");
     }
@@ -77,6 +94,32 @@ library LibUpgradeableProxy {
         bytes memory initializerData
     ) internal returns (address) {
         return deployTransparentProxy(contractName, initialOwner, initializerData, "");
+    }
+
+    /**
+     * @dev Deploys a transparent proxy using the given contract as the implementation.
+     *
+     * @param contractName Name of the contract to use as the implementation, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
+     * @param initialOwner Address to set as the owner of the ProxyAdmin contract which gets deployed by the proxy
+     * @param initializerData Encoded call data of the initializer function to call during creation of the proxy, or empty if no initialization is required
+     * @return Proxy address
+     */
+    function deployTransparentProxy(
+        bytes32 salt,
+        string memory contractName,
+        address initialOwner,
+        bytes memory initializerData,
+        bytes memory implConstructorArgs
+    ) internal returns (address) {
+        address impl = deployImplementation(contractName, implConstructorArgs);
+        return
+            address(
+                _deploy(
+                    salt,
+                    "TransparentUpgradeableProxy.sol:TransparentUpgradeableProxy",
+                    abi.encode(impl, initialOwner, initializerData)
+                )
+            );
     }
 
     /**
@@ -117,6 +160,23 @@ library LibUpgradeableProxy {
     ) internal returns (address) {
         address impl = deployImplementation(contractName, implConstructorArgs);
         return _deploy("UpgradeableBeacon.sol:UpgradeableBeacon", abi.encode(impl, initialOwner));
+    }
+
+    /**
+     * @dev Deploys an upgradeable beacon using the given contract as the implementation.
+     *
+     * @param contractName Name of the contract to use as the implementation, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
+     * @param initialOwner Address to set as the owner of the UpgradeableBeacon contract which gets deployed
+     * @return Beacon address
+     */
+    function deployBeacon(
+        bytes32 salt,
+        string memory contractName,
+        address initialOwner,
+        bytes memory implConstructorArgs
+    ) internal returns (address) {
+        address impl = deployImplementation(contractName, implConstructorArgs);
+        return _deploy(salt, "UpgradeableBeacon.sol:UpgradeableBeacon", abi.encode(impl, initialOwner));
     }
 
     /**
@@ -229,6 +289,27 @@ library LibUpgradeableProxy {
     function _deploy(string memory contractName, bytes memory implConstructorArgs) private returns (address) {
         bytes memory creationCode = Vm(CHEATCODE_ADDRESS).getCode(contractName);
         address deployedAddress = _deployFromBytecode(abi.encodePacked(creationCode, implConstructorArgs));
+        if (deployedAddress == address(0)) {
+            revert(
+                string.concat(
+                    "Failed to deploy contract ",
+                    contractName,
+                    ' using constructor data "',
+                    string(implConstructorArgs),
+                    '"'
+                )
+            );
+        }
+        return deployedAddress;
+    }
+
+    function _deploy(
+        bytes32 salt,
+        string memory contractName,
+        bytes memory implConstructorArgs
+    ) private returns (address) {
+        bytes memory creationCode = Vm(CHEATCODE_ADDRESS).getCode(contractName);
+        address deployedAddress = Create3.create3(salt, abi.encodePacked(creationCode, implConstructorArgs));
         if (deployedAddress == address(0)) {
             revert(
                 string.concat(
