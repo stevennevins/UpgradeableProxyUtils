@@ -1,5 +1,5 @@
 {
-  "name": "@stevennevins/proxy",
+  "name": "@stevennevins/foundry-oz-upgrades-v4-utils",
   "dependencies": {
     "@0xsequence/create3": "github:0xsequence/create3",
     "@openzeppelin/contracts": "4.9",
