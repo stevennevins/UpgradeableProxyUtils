@@ -106,4 +106,30 @@ contract LibUpgradeableProxyTest is Test {
 
         assertEq(WithConstructor(proxy).a(), 123);
     }
+
+    function testTransparentDeterministic() public {
+        bytes32 salt = keccak256("test");
+        address proxy = LibUpgradeableProxy.deployTransparentProxy(
+            salt,
+            "Greeter.sol",
+            address(admin),
+            abi.encodeCall(Greeter.initialize, ("hello")),
+            ""
+        );
+
+        Greeter instance = Greeter(proxy);
+        address implAddressV1 = LibUpgradeableProxy.getImplementationAddress(proxy);
+        address adminAddress = LibUpgradeableProxy.getAdminAddress(proxy);
+
+        assertFalse(adminAddress == address(0));
+        assertEq(instance.greeting(), "hello");
+
+        LibUpgradeableProxy.upgradeProxy(proxy, "GreeterV2.sol", abi.encodeCall(GreeterV2.resetGreeting, ()));
+
+        address implAddressV2 = LibUpgradeableProxy.getImplementationAddress(proxy);
+
+        assertEq(LibUpgradeableProxy.getAdminAddress(proxy), adminAddress);
+        assertEq(instance.greeting(), "reset");
+        assertFalse(implAddressV2 == implAddressV1);
+    }
 }

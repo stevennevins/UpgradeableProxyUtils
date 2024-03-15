@@ -1,7 +1,6 @@
 {
   "name": "@stevennevins/foundry-oz-upgrades-v4-utils",
   "dependencies": {
-    "@0xsequence/create3": "github:0xsequence/create3",
     "@openzeppelin/contracts": "4.9",
     "ds-test": "github:dapphub/ds-test",
     "forge-std": "github:foundry-rs/forge-std"
