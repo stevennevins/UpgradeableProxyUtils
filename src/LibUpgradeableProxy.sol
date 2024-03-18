@@ -259,7 +259,9 @@ library LibUpgradeableProxy {
         bytes memory implConstructorArgs
     ) internal returns (address) {
         address impl = deployImplementation(contractName, implConstructorArgs);
-        return _deploy("UpgradeableBeacon.sol:UpgradeableBeacon", abi.encode(impl, initialOwner));
+        address beacon = _deploy("UpgradeableBeacon.sol:UpgradeableBeacon", abi.encode(impl));
+        UpgradeableBeacon(beacon).transferOwnership(initialOwner);
+        return beacon;
     }
 
     /**

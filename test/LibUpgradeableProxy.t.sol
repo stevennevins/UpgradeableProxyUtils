@@ -80,7 +80,7 @@ contract LibUpgradeableProxyTest is Test {
     }
 
     function testBeacon() public {
-        address beacon = LibUpgradeableProxy.deployBeacon("Greeter.sol", address(admin), abi.encode());
+        address beacon = LibUpgradeableProxy.deployBeacon("Greeter.sol", address(this), abi.encode());
         address implAddressV1 = IBeacon(beacon).implementation();
 
         address proxy = LibUpgradeableProxy.deployBeaconProxy(beacon, abi.encodeCall(Greeter.initialize, ("hello")));
@@ -99,7 +99,7 @@ contract LibUpgradeableProxyTest is Test {
     }
 
     function testUpgradeBeaconWithoutCaller() public {
-        address beacon = LibUpgradeableProxy.deployBeacon("Greeter.sol", address(admin), abi.encode());
+        address beacon = LibUpgradeableProxy.deployBeacon("Greeter.sol", address(this), abi.encode());
         LibUpgradeableProxy.upgradeBeacon(beacon, "GreeterV2.sol", abi.encode());
     }
 
