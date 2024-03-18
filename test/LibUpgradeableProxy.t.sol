@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import {Test} from "forge-std/Test.sol";
 
-import {LibUpgradeableProxy} from "../src/LibUpgradeableProxy.sol";
+import {LibUpgradeableProxy, Create3CanonicalFactory} from "../src/LibUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {IBeacon} from "@openzeppelin/contracts/proxy/beacon/IBeacon.sol";
 import {Greeter, GreeterV2, WithConstructor, GreeterV2Proxiable} from "./utils/ProxyTestContracts.sol";
@@ -79,6 +79,30 @@ contract LibUpgradeableProxyTest is Test {
         assertFalse(implAddressV2 == implAddressV1);
     }
 
+    function testBeaconDeterministic() public {
+        bytes32 salt = keccak256("SALT");
+        address predicted = Create3CanonicalFactory.addressOf(salt);
+        address beacon = LibUpgradeableProxy.deployBeacon(salt, "Greeter.sol", address(this), abi.encode());
+
+        assertEq(predicted, beacon, "Address mismatch");
+
+        address implAddressV1 = IBeacon(beacon).implementation();
+
+        address proxy = LibUpgradeableProxy.deployBeaconProxy(beacon, abi.encodeCall(Greeter.initialize, ("hello")));
+        Greeter instance = Greeter(proxy);
+
+        assertEq(LibUpgradeableProxy.getBeaconAddress(proxy), beacon);
+        assertEq(instance.greeting(), "hello");
+
+        LibUpgradeableProxy.upgradeBeacon(beacon, "GreeterV2.sol");
+        address implAddressV2 = IBeacon(beacon).implementation();
+
+        GreeterV2(address(instance)).resetGreeting();
+
+        assertEq(instance.greeting(), "reset");
+        assertFalse(implAddressV2 == implAddressV1);
+    }
+
     function testBeacon() public {
         address beacon = LibUpgradeableProxy.deployBeacon("Greeter.sol", address(this), abi.encode());
         address implAddressV1 = IBeacon(beacon).implementation();
@@ -97,7 +121,6 @@ contract LibUpgradeableProxyTest is Test {
         assertEq(instance.greeting(), "reset");
         assertFalse(implAddressV2 == implAddressV1);
     }
-
     function testUpgradeBeaconWithoutCaller() public {
         address beacon = LibUpgradeableProxy.deployBeacon("Greeter.sol", address(this), abi.encode());
         LibUpgradeableProxy.upgradeBeacon(beacon, "GreeterV2.sol", abi.encode());

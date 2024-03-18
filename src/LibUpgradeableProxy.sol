@@ -8,6 +8,12 @@ import {UpgradeableBeacon} from "@openzeppelin/contracts/proxy/beacon/Upgradeabl
 import {BeaconProxy} from "@openzeppelin/contracts/proxy/beacon/BeaconProxy.sol";
 import {ITransparentUpgradeableProxy, TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 
+contract UpgradeableBeacon2 is UpgradeableBeacon {
+    constructor(address implementation, address initialOwner) UpgradeableBeacon(implementation) {
+        _transferOwnership(initialOwner);
+    }
+}
+
 library Create3CanonicalFactory {
     error ErrorCreatingProxy();
     error ErrorCreatingContract();
@@ -262,6 +268,23 @@ library LibUpgradeableProxy {
         address beacon = _deploy("UpgradeableBeacon.sol:UpgradeableBeacon", abi.encode(impl));
         UpgradeableBeacon(beacon).transferOwnership(initialOwner);
         return beacon;
+    }
+    /**
+     * @dev Deploys an upgradeable beacon using the given contract as the implementation.
+     *
+     * @param salt A deterministic salt used with create3
+     * @param contractName Name of the contract to use as the implementation, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
+     * @param initialOwner Address to set as the owner of the UpgradeableBeacon contract which gets deployed
+     * @return Beacon address
+     */
+    function deployBeacon(
+        bytes32 salt,
+        string memory contractName,
+        address initialOwner,
+        bytes memory implConstructorArgs
+    ) internal returns (address) {
+        address impl = deployImplementation(contractName, implConstructorArgs);
+        return _deploy(salt, "LibUpgradeableProxy.sol:UpgradeableBeacon2", abi.encode(impl, initialOwner));
     }
 
     /**
