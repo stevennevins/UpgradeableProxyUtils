@@ -265,23 +265,6 @@ library LibUpgradeableProxy {
     }
 
     /**
-     * @dev Deploys an upgradeable beacon using the given contract as the implementation.
-     *
-     * @param contractName Name of the contract to use as the implementation, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
-     * @param initialOwner Address to set as the owner of the UpgradeableBeacon contract which gets deployed
-     * @return Beacon address
-     */
-    function deployBeacon(
-        bytes32 salt,
-        string memory contractName,
-        address initialOwner,
-        bytes memory implConstructorArgs
-    ) internal returns (address) {
-        address impl = deployImplementation(contractName, implConstructorArgs);
-        return _deploy(salt, "UpgradeableBeacon.sol:UpgradeableBeacon", abi.encode(impl, initialOwner));
-    }
-
-    /**
      * @dev Deploys a beacon proxy using the given beacon and call data.
      *
      * @param beacon Address of the beacon to use
