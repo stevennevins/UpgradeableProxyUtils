@@ -98,7 +98,7 @@ library Create3CanonicalFactory {
 
     @dev The address creation formula is: keccak256(rlp([keccak256(0xff ++ address(this) ++ _salt ++ keccak256(childBytecode))[12:], 0x01]))
   */
-    function addressOf(bytes32 _salt) internal view returns (address) {
+    function addressOf(bytes32 _salt) internal pure returns (address) {
         address proxy = address(
             uint160(
                 uint256(keccak256(abi.encodePacked(hex"ff", CREATE2_FACTORY, _salt, KECCAK256_PROXY_CHILD_BYTECODE)))
