@@ -324,10 +324,10 @@ library LibUpgradeableProxy {
      * @dev Upgrades a proxy to a new implementation contract.
      * @param proxy Address of the proxy to upgrade
      * @param contractName Name of the new implementation contract to upgrade to, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
-     * @param data Encoded call data of an arbitrary function to call during the upgrade process, or empty if no function needs to be called during the upgrade
+     * @param initializerData Encoded call data of an arbitrary function to call during the upgrade process, or empty if no function needs to be called during the upgrade
      */
-    function upgradeProxy(address proxy, string memory contractName, bytes memory data) internal {
-        upgradeProxy(proxy, contractName, data, "");
+    function upgradeProxy(address proxy, string memory contractName, bytes memory initializerData) internal {
+        upgradeProxy(proxy, contractName, initializerData, "");
     }
 
     /**
@@ -432,10 +432,10 @@ library LibUpgradeableProxy {
         return deployedAddress;
     }
 
-    function _deployFromBytecode(bytes memory bytecode) private returns (address) {
+    function _deployFromBytecode(bytes memory initCode) private returns (address) {
         address addr;
         assembly {
-            addr := create(0, add(bytecode, 32), mload(bytecode))
+            addr := create(0, add(initCode, 32), mload(initCode))
         }
         return addr;
     }
