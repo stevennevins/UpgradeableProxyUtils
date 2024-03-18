@@ -307,29 +307,29 @@ library LibUpgradeableProxy {
      * @dev Upgrades a proxy to a new implementation contract.
      * @param proxy Address of the proxy to upgrade
      * @param contractName Name of the new implementation contract to upgrade to, e.g. "MyContract.sol" or "MyContract.sol:MyContract" or artifact path relative to the project root directory
-     * @param data Encoded call data of an arbitrary function to call during the upgrade process, or empty if no function needs to be called during the upgrade
+     * @param initializerData Encoded call data of an arbitrary function to call during the upgrade process, or empty if no function needs to be called during the upgrade
      * @param implConstructorArgs abi encoded constructor arguments for deploying the implementation contract
      */
     function upgradeProxy(
         address proxy,
         string memory contractName,
-        bytes memory data,
+        bytes memory initializerData,
         bytes memory implConstructorArgs
     ) internal {
         address newImpl = _deploy(contractName, implConstructorArgs);
 
         bytes32 adminSlot = vm.load(proxy, _ADMIN_SLOT);
         if (adminSlot == bytes32(0)) {
-            if (data.length > 0) {
+            if (initializerData.length > 0) {
                 // No admin contract: upgrade directly using interface
-                ITransparentUpgradeableProxy(payable(proxy)).upgradeToAndCall(newImpl, data);
+                ITransparentUpgradeableProxy(payable(proxy)).upgradeToAndCall(newImpl, initializerData);
             } else {
                 ITransparentUpgradeableProxy(payable(proxy)).upgradeTo(newImpl);
             }
         } else {
-            if (data.length > 0) {
+            if (initializerData.length > 0) {
                 ProxyAdmin admin = ProxyAdmin(address(uint160(uint256(adminSlot))));
-                admin.upgradeAndCall(ITransparentUpgradeableProxy(payable(proxy)), newImpl, data);
+                admin.upgradeAndCall(ITransparentUpgradeableProxy(payable(proxy)), newImpl, initializerData);
             } else {
                 ProxyAdmin admin = ProxyAdmin(address(uint160(uint256(adminSlot))));
                 admin.upgrade(ITransparentUpgradeableProxy(payable(proxy)), newImpl);
