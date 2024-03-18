@@ -318,11 +318,20 @@ library LibUpgradeableProxy {
 
         bytes32 adminSlot = vm.load(proxy, _ADMIN_SLOT);
         if (adminSlot == bytes32(0)) {
-            // No admin contract: upgrade directly using interface
-            ITransparentUpgradeableProxy(payable(proxy)).upgradeToAndCall(newImpl, data);
+            if (data.length > 0) {
+                // No admin contract: upgrade directly using interface
+                ITransparentUpgradeableProxy(payable(proxy)).upgradeToAndCall(newImpl, data);
+            } else {
+                ITransparentUpgradeableProxy(payable(proxy)).upgradeTo(newImpl);
+            }
         } else {
-            ProxyAdmin admin = ProxyAdmin(address(uint160(uint256(adminSlot))));
-            admin.upgradeAndCall(ITransparentUpgradeableProxy(payable(proxy)), newImpl, data);
+            if (data.length > 0) {
+                ProxyAdmin admin = ProxyAdmin(address(uint160(uint256(adminSlot))));
+                admin.upgradeAndCall(ITransparentUpgradeableProxy(payable(proxy)), newImpl, data);
+            } else {
+                ProxyAdmin admin = ProxyAdmin(address(uint160(uint256(adminSlot))));
+                admin.upgrade(ITransparentUpgradeableProxy(payable(proxy)), newImpl);
+            }
         }
     }
 

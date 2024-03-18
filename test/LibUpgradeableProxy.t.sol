@@ -57,6 +57,28 @@ contract LibUpgradeableProxyTest is Test {
         assertFalse(implAddressV2 == implAddressV1);
     }
 
+    function testTransparentNoInitializer() public {
+        address proxy = LibUpgradeableProxy.deployTransparentProxy(
+            "Greeter.sol",
+            address(admin),
+            abi.encodeCall(Greeter.initialize, ("hello"))
+        );
+        Greeter instance = Greeter(proxy);
+        address implAddressV1 = LibUpgradeableProxy.getImplementationAddress(proxy);
+        address adminAddress = LibUpgradeableProxy.getAdminAddress(proxy);
+
+        assertFalse(adminAddress == address(0));
+        assertEq(instance.greeting(), "hello");
+
+        LibUpgradeableProxy.upgradeProxy(proxy, "GreeterV2.sol", "");
+
+        address implAddressV2 = LibUpgradeableProxy.getImplementationAddress(proxy);
+
+        assertEq(LibUpgradeableProxy.getAdminAddress(proxy), adminAddress);
+        assertEq(instance.greeting(), "hello");
+        assertFalse(implAddressV2 == implAddressV1);
+    }
+
     function testBeacon() public {
         address beacon = LibUpgradeableProxy.deployBeacon("Greeter.sol", address(admin), abi.encode());
         address implAddressV1 = IBeacon(beacon).implementation();
